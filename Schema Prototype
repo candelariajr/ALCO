@@ -1,0 +1,373 @@
+Tags
+	id
+	facet_id <- FK to FACET.id
+	tagname
+	tag_description
+
+Tags_To_Media
+	relation_id 
+	tag_id <- FK to TAGS.id
+	project_id <- FK to PROJECTS.d 
+	disputed
+	disputed_by <- FK to USERS.id 
+	disputed_date
+
+Facets
+	id
+	name
+	description
+		Prepopulated Names: 
+		Protected Metadata
+		Game
+		Graphics
+		Regional
+		Operating System
+		Technology
+		Project
+		Non-Protected Metadata
+		CM
+		
+Media
+	id
+	filename
+	original_filename
+	caption
+	display_order
+	flagged_for_removal
+	removed 
+	removal_reason
+	removed_by <- FK to USERS.id
+	removal_date
+	added_by <- FK USERS.id 
+	added_date
+  
+Scoped_Media
+	id
+	media_id FK to MEDIA.id 
+	scope_id FK to SCOPES.id  
+	scoped_record_id ID exists in INNODB.[scopes.*scope_id.table_ref*]
+	removed_by FK to USERS.id 
+	removal_date
+	removal_reason 
+		-- Admin can remove media from specific content without having to remove it from all content
+	linked_date
+	linked_by FK to USERS.id 
+  
+  Scopes
+	id
+	name 
+	table_ref
+	field_ref
+	scope_type
+	description
+		Prepopulated Values: 
+		Image Media
+			Project Cover
+			Project Headline Banner
+			Project Media Pool Entry
+			Project Signature Thumbnail
+			User Avatar 
+			User Profile Content
+			User Media Post
+		Text
+			Project Description
+			Project Tags
+			User Comment
+			User
+			User Profile Page 
+			Developer 
+			URL
+			User Text Post
+			Message
+		Image Media scopes:
+			Link a media image to post or content. Losen bond between media and content- 
+			An item asks if it has any media attached to it. If so, load them. 
+			An image can exist without stuff to link it to (these are deleted by batch processes)
+
+Scope_Types
+	id
+	name
+	description
+		Prepopulated Values: 
+		1 - Image Media 
+		2 - Text
+    
+Users
+	id
+	anonymous <- displays username as Member123345 on posts, site doesn't render link to profile 
+	display_name
+	user_type FK to USER_TYPES.id 
+	avatar_id
+		saved media id
+	email_address
+	off-site_auth_session_metadata_type
+	off-site_auth_session_metadata <- user-specific metadata 
+	profile_conent 
+	profile_content_foreign_link
+	HTML_profile_flag
+	active
+	banned
+	banned_by FK to USERS.id
+	deactivation_notes
+	password
+	password_salt
+	registration_token
+	registration_active
+	show_community_participation_stats
+	show_community_badges
+	post_count
+	ratings_submitted
+	community_contributions
+	member_since
+	allow_contact <- allow internal messaging from site
+	signature_document_enable
+	
+Off-Site_Authentication_Session_Metadata_Types
+	id
+	name
+	strategy
+	
+Sessions
+	id
+	user_id
+	off-site_auth_session_metadata <-session-specific metadata
+	active
+	start
+	timeout
+	token
+	salt
+	remote_ip
+	
+Login_Map
+	id
+	user_id
+	remote_ip
+	geographic_location
+	device_type
+	off-site_authentication_type     
+  
+Login_Map_Index   -> Batch processes consolidate login_map to login_map_index to prevent login_map from becoming too big 
+	id
+	user_id
+	remote_ip
+	geographic_location
+	display_name
+	off-site_authentication_type
+	frequency
+	
+Site_Donations
+	id
+	donation_amount
+	donated_by -> FK to USERS.id
+	donation_date 
+	
+User_Types
+	id
+	name
+	description 
+		Prepopulated Values: 
+		Admin
+		Site Community Moderator
+		Site Curator
+		Site Contributer 
+    
+Badges_Awarded
+	id
+	user_id 
+	badge_id
+	awarded_by
+	awarded_date
+	show
+		
+		
+User_Badges
+	id
+	name 
+	description
+		Prepopulated Values:
+		Frequent Uploader
+		Frequent Contributer
+		Donor
+		Top Donor
+		Staff
+		Respected User
+		Best Commentary 
+		Developer 
+		
+Comments
+	id
+	project_id -> FK to PROJECTS.id 
+	posted_by -> FK to USERS.id 
+	parent_id -> FK to COMMENTS.id 
+	order
+	post_time
+	blocked
+	removed_by -> FK to USERS.id
+	removed_date
+	flagged
+	darkphrase_flag
+	darkphrase_release
+	can_edit
+	enable_html
+	outside_link_flag
+	comment_text
+	positive_vote_count
+	negative_vote_count
+
+HTML_Documents
+	id 
+	HTML_Document_Type
+	HTML
+	author_id FK to USERS.id
+	scope_id 
+	scoped_record_id
+	can_edit
+	flagged 
+	
+HTML_Document_Type
+	id 
+	name
+	description
+	max_length
+	scope_id FK to SCOPES.id -> What scope is this document for? 
+	anchor_rule <- 2D array of anchor_id and quantity allowed in document 
+		Prepopulated Values:
+		Signature
+		Comment
+		User Page 
+		
+HTML_Anchor
+	id
+	anchor_regex
+	scope_id <- what scope is it 
+	render_xml <- template XML for rendering object_properties
+	object_properties <- array of attributes this anchor is able to obtain 
+
+		
+Batch/Automation Table
+HTML_Document_Links
+	id 
+	anchor_id
+	shared_scope_id - Determine what type of object is shared 
+	shared_scope_record_id - Determine the id of object within said type shared
+	shared_prevalance_count	- Number of times shared ~ Estimated renders 
+	** This is a loose table. It is populated by batches and analyzed by batches. It determines which comments, media items, pages, projects, whatever are being shared and how much. 
+	** Determines awards/recognition for contributions that stand out 
+	
+	
+Binary_Ratings
+	id
+	name 
+		Prepopulated Values: 
+		Positive
+		Negative
+		Recinded
+    
+Comment_Ratings
+	id
+	comment_id -> FK to COMMENTS.id
+	user_id -> FK to USERS.id
+	rating -> FK to BINARY__RATINGS.id 
+	
+Project_Classes
+	id 
+	name
+	description
+		Prepopulated Values: 
+		This is the list of gameplay functions 
+	
+Projects
+	id
+	title 
+	description
+	project_class -> FK to PROJECT_CLASSES.id 
+	current_version
+	project_last_updated
+	developer_id -> FK to DEVELOPERS.id 
+	removed_reason
+	removed_reason_public
+	removed_date
+	removed_by -> FK to USERS.id
+	filesize
+	rating
+	comment_count
+	view_count 
+	
+Project_Ratings
+	id
+	project_id FK to PROJECTS.id
+	rated_by -> FK to USERS.id 
+	rating [0-5]
+	rated_date
+	
+Project_Links
+	id
+	project_id
+	site_type_id -> FK to LINK_TYPES.id
+	link_url 
+	reported_broken
+	flagged
+	flagged_by -> FK to USERS.id 
+	flagged_by_reason
+	flagged_by_date 
+	active 
+  
+Link_Types
+	id
+	display_name 
+	description
+	strategy
+		Prepopulated Strategies:
+		Mega
+		AnonCX
+		Patreon
+		Steam ID
+		Developer Page
+		Itch.io
+		DLSite
+		Patch
+	
+Developers
+	id
+	public_name
+	link
+	active
+	country
+	description
+
+Action_Items
+	id
+	date
+	acknowledged
+	acknowledged_by to USERS.id 
+	darkphrase_flag 
+	notes
+	action_item_reason
+	scope FK to SCOPES.id 
+	scope_record_id an id that exists in {SCOPES[ID]-> SCOPE_TABLE)
+	reported_by -> FK to USERS.id 
+	
+Jobs
+	id
+	name
+	description 
+	
+Job_Activity
+	id
+	job_id 
+	status
+	start_time
+	end_time
+	total_time
+	scope_id
+  
+Job_Activity_Index
+	id
+	job_id 
+	scope_id 
+	average_time
+	times_run
+	xml_stat_summary 
+
+  
+	
